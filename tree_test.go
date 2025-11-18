@@ -1,8 +1,10 @@
 package main
 
 import (
-    "testing"
-    "github.com/stretchr/testify/assert"
+	"encoding/json"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 
@@ -101,4 +103,76 @@ func TestBuildTree(t *testing.T) {
   assert.Equal(t, "john@email.com", tree.GetValue("email"))
   assert.Equal(t, "{\"meta\": \"data\"}", tree.GetValue("escaped"))
   assert.Equal(t, BoolType, tree.Nodes["active"].Type)
+}
+
+func TestPrintAsJSON_FullTree(t *testing.T) {
+    data := map[string]interface{}{
+        "user": map[string]interface{}{
+          "name": "John",
+          "age":  30.0,
+        },
+        // Unmarshal defaults to float64, so a cast is needed
+        // for the test
+        "friends": []interface{}{float64(1), 2.5, "three", true, nil},
+        "identifications": []interface{}{
+          map[string]interface{}{
+              "type": "passport",
+              "number": "123456789",
+          },
+          map[string]interface{}{
+              "type": "license",
+              "number": "987654321",
+          },
+        },
+        "email": "john@email.com",
+        "escaped": "{\"meta\": \"data\"}",
+        "active": true,
+    }
+
+    tree := BuildTree(data, "", nil)
+
+    t.Run("print full tree", func(t *testing.T) {
+        result := tree.PrintAsJSONFromRoot()
+
+        // Parse both, expected and actual JSON
+        var actual interface{}
+        err := json.Unmarshal([]byte(result), &actual)
+        assert.NoError(t, err, "Generated JSON should be valid")
+
+        // expected, actual
+        assert.Equal(t, data, actual)
+    })
+}
+
+func TestPrintAsJSON_CollapsedObject(t *testing.T) {
+    data := map[string]interface{}{
+        "user": map[string]interface{}{
+          "name": "John",
+          "age":  30.0,
+        },
+    }
+
+    tree := BuildTree(data, "", nil)
+    tree.Collapse("user")
+
+    t.Run("print tree with collapsed object", func(t *testing.T) {
+        expected := "{\n  \"user\": {...} // 2 properties\n}"
+        assert.Equal(t, expected, tree.PrintAsJSONFromRoot())
+    })
+}
+
+func TestPrintAsJSON_CollapsedArray(t *testing.T) {
+    data := map[string]interface{}{
+        "user": map[string]interface{}{
+            "emails": []interface{}{"user@mail.com", "user@mail.org"},
+        },
+    }
+
+    tree := BuildTree(data, "", nil)
+    tree.Collapse("user.emails")
+
+    t.Run("print tree with collapsed object", func(t *testing.T) {
+        expected := "{\n  \"user\": {\n    \"emails\": [...] // 2 items\n  }\n}"
+        assert.Equal(t, expected, tree.PrintAsJSONFromRoot())
+    })
 }
