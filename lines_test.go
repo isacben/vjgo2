@@ -31,8 +31,8 @@ func TestNewVisibleLines(t *testing.T) {
 			"four lines visible",
 			2,
 			4,
-		    "line0\nline1\nline2\nline3\n" +
-            "line4\nline5\nline6\nline7\nline7",
+			"line0\nline1\nline2\nline3\n" +
+				"line4\nline5\nline6\nline7\nline7",
 			[]line{
 				{2, "line2"}, {3, "line3"}, {4, "line4"},
 				{5, "line5"},

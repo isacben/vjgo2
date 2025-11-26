@@ -9,16 +9,20 @@ import (
 )
 
 type JSONTree struct {
-	Nodes     map[string]*Node    `json:"nodes"`
-	Children  map[string][]string `json:"children"`
-	Collapsed map[string]bool     `json:"collapsed"`
+	Nodes       map[string]*Node    `json:"nodes"`
+	LineNumbers map[int]*Node       `json:"lineNumbers"`
+	Children    map[string][]string `json:"children"`
+	Collapsed   map[string]bool     `json:"collapsed"`
+	lineCounter int
 }
 
 func NewJSONTree() *JSONTree {
 	return &JSONTree{
-		Nodes:     make(map[string]*Node),
-		Children:  make(map[string][]string),
-		Collapsed: make(map[string]bool),
+		Nodes:       make(map[string]*Node),
+		LineNumbers: make(map[int]*Node),
+		Children:    make(map[string][]string),
+		Collapsed:   make(map[string]bool),
+		lineCounter: 0,
 	}
 }
 
@@ -61,6 +65,12 @@ func (jt *JSONTree) AddChild(parent string, child string) {
 // GetNode returns the node at the given path
 func (jt *JSONTree) GetNode(path string) (*Node, bool) {
 	node, exists := jt.Nodes[path]
+	return node, exists
+}
+
+// GetNodeAtLine returns the node at a given line number
+func (jt *JSONTree) GetNodeAtLine(lineNum int) (*Node, bool) {
+	node, exists := jt.LineNumbers[lineNum]
 	return node, exists
 }
 
@@ -256,6 +266,8 @@ func BuildTree(data interface{}, basePath string, tree *JSONTree) *JSONTree {
 			IsArrayElement: false,
 		}
 		tree.Nodes[""] = rootNode
+		tree.LineNumbers[tree.lineCounter] = rootNode
+        tree.lineCounter++
 	}
 
 	createNode := func(path string, value interface{}, key string) *Node {
@@ -282,7 +294,10 @@ func BuildTree(data interface{}, basePath string, tree *JSONTree) *JSONTree {
 		// map[string]interface{} if for JSON objects
 		for key, value := range v {
 			childPath := buildChildPath(basePath, key, false)
-			tree.Nodes[childPath] = createNode(childPath, value, key)
+            node := createNode(childPath, value, key)
+			tree.Nodes[childPath] = node 
+            tree.LineNumbers[tree.lineCounter] = node
+            tree.lineCounter++
 			tree.AddChild(basePath, childPath)
 
 			// Recursively build for nested objects/arrays
@@ -290,13 +305,17 @@ func BuildTree(data interface{}, basePath string, tree *JSONTree) *JSONTree {
 				BuildTree(value, childPath, tree)
 			}
 		}
+        tree.lineCounter++
 
 	case []interface{}:
 		// []interface{} is for JSON arrays
 		for i, value := range v {
 			key := strconv.Itoa(i)
 			childPath := buildChildPath(basePath, key, true)
-			tree.Nodes[childPath] = createNode(childPath, value, fmt.Sprintf("[%d]", i))
+            node := createNode(childPath, value, fmt.Sprintf("[%d]", i))
+			tree.Nodes[childPath] = node
+            tree.LineNumbers[tree.lineCounter] = node
+            tree.lineCounter++
 			tree.AddChild(basePath, childPath)
 
 			// Recursively build for nested objects/arrays
@@ -304,6 +323,7 @@ func BuildTree(data interface{}, basePath string, tree *JSONTree) *JSONTree {
 				BuildTree(value, childPath, tree)
 			}
 		}
+        tree.lineCounter++
 	}
 
 	return tree

@@ -1,7 +1,7 @@
 package main
 
 import (
-    "strings"
+	"strings"
 )
 
 type line struct {
@@ -18,17 +18,19 @@ type VisibleLines struct {
 
 func NewVisibleLines(firstLine int, total int, content string) *VisibleLines {
 	vl := &VisibleLines{}
-    vl.UpdateContent(content)
+	vl.UpdateContent(content)
 	vl.UpdateVisibleLines(firstLine, total)
 	return vl
 }
 
 func (vl *VisibleLines) UpdateContent(content string) {
-    lines := strings.Split(content, "\n")
-    for i,l := range lines {
-        ln := line{i, l}
-        vl.content = append(vl.content, ln)
-    }
+	lines := strings.Split(content, "\n")
+	// clear slice
+	vl.content = vl.content[:0]
+	for i, l := range lines {
+		ln := line{i, l}
+		vl.content = append(vl.content, ln)
+	}
 }
 
 func (vl *VisibleLines) UpdateVisibleLines(firstLine int, total int) {

@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -210,4 +212,81 @@ func TestPrintAsJSON_CollapsedArray(t *testing.T) {
 		expected := "{\n  \"user\": {\n    \"emails\": [...] // 2 items\n  }\n}"
 		assert.Equal(t, expected, tree.PrintAsJSONFromRoot())
 	})
+}
+
+func TestGetNode(t *testing.T) {
+	data := map[string]interface{}{
+		"user": map[string]interface{}{
+			"name": "John",
+			"age":  30.0,
+		},
+	}
+
+	tests := []struct {
+		name     string
+		path     string
+		expected string
+	}{
+        {
+            "get object node",
+            "user",
+            "user",
+        },
+        {
+            "get nested node",
+            "user.age",
+            "age",
+        },
+    }
+
+	tree := BuildTree(data, "", nil)
+
+	for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            node, exists := tree.GetNode(tt.path)
+            assert.True(t, exists, "Node should exist")
+            assert.Equal(t, tt.expected, node.Key)
+        })
+    }
+}
+
+func TestGetNodeAtLine(t *testing.T) {
+	data := map[string]interface{}{
+		"user": map[string]interface{}{
+			"name": "John",
+			"age":  30.0,
+		},
+        "email": "john@example.com",
+		"identifications": []interface{}{
+			map[string]interface{}{
+				"type":   "passport",
+				"number": "123456789",
+			},
+			map[string]interface{}{
+				"type":   "license",
+				"number": "987654321",
+			},
+		},
+        "active": true,
+	}
+
+	tree := BuildTree(data, "", nil)
+
+    // Use the non JSON print version, because
+    // the line numbers follow the same pattern
+    // as the JSON print
+    printedTree := tree.PrintFromRoot()
+    lines := strings.Split(printedTree, "\n")
+
+	for i, line := range lines {
+        t.Run(fmt.Sprintf("test line %d", i), func(t *testing.T) {
+            // Get the node at each line
+            node, exists := tree.GetNodeAtLine(i)
+            if exists {
+                // If there is a node, check if the printed
+                // line contains the node key
+                assert.True(t, strings.Contains(line, node.Key))
+            }
+        })
+    }
 }
