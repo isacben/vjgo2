@@ -167,6 +167,7 @@ func TestPrintAsJSON_FullTree(t *testing.T) {
 	tree := BuildTree(data, "", nil)
 
 	t.Run("print full tree", func(t *testing.T) {
+        currentTheme = themes["nocolor"]
 		result := tree.PrintAsJSONFromRoot()
 
 		// Parse both, expected and actual JSON
@@ -189,6 +190,7 @@ func TestPrintAsJSON_CollapsedObject(t *testing.T) {
 
 	tree := BuildTree(data, "", nil)
 	tree.Collapse("user")
+    currentTheme = themes["nocolor"]
 
 	t.Run("print tree with collapsed object", func(t *testing.T) {
 		expected := "{\n  \"user\": {...} // 2 properties\n}"

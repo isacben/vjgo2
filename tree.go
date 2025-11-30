@@ -169,7 +169,8 @@ func (jt *JSONTree) PrintAsJSON(startPath string, indent int) string {
 						result += ",\n"
 					}
 					childNode := jt.Nodes[childPath]
-					result += strings.Repeat("  ", indent+1) + `"` + childNode.Key + `": `
+					result += strings.Repeat("  ", indent+1) + `"` + 
+                        keyStyle.Render(childNode.Key) + `": `
 					result += strings.TrimSpace(jt.PrintAsJSON(childPath, indent+1))
 				}
 				result += "\n" + strings.Repeat("  ", indent) + "}"
@@ -206,7 +207,8 @@ func (jt *JSONTree) PrintAsJSON(startPath string, indent int) string {
 			}
 			childNode := jt.Nodes[childPath]
 			// Quote the key and add colon
-			result += strings.Repeat("  ", indent+1) + `"` + childNode.Key + `": `
+			result += strings.Repeat("  ", indent+1) + `"` +
+                keyStyle.Render(childNode.Key) + `": `
 			result += strings.TrimSpace(jt.PrintAsJSON(childPath, indent+1))
 		}
 		result += "\n" + strings.Repeat("  ", indent) + "}"
@@ -234,16 +236,17 @@ func (jt *JSONTree) PrintAsJSON(startPath string, indent int) string {
 		return result
 
 	case StringType:
-		return `"` + strings.ReplaceAll(node.Value.(string), `"`, `\"`) + `"`
+		return stringStyle.Render(
+            `"` + strings.ReplaceAll(node.Value.(string), `"`, `\"`) + `"`)
 
 	case NumberType:
-		return fmt.Sprintf("%v", node.Value)
+		return numberStyle.Render(fmt.Sprintf("%v", node.Value))
 
 	case BoolType:
-		return fmt.Sprintf("%t", node.Value.(bool))
+		return booleanStyle.Render(fmt.Sprintf("%t", node.Value.(bool)))
 
 	case NullType:
-		return "null"
+		return nullStyle.Render("null")
 
 	default:
 		// Fallback to JSON marshal

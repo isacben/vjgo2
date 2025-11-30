@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
+	"unicode"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -15,7 +17,7 @@ func main() {
 	jsonData := `{
         "user": {
             "name": "John",
-            "list": [1, 2, "three", 4],
+            "list": [1, 2, "three", 4, true, null],
             "escaped": "{\"hello\": \"world\"}",
             "addresses": [
                 {
@@ -28,7 +30,9 @@ func main() {
                 }
             ]
         },
-        "email": "user@mail.com"
+        "email": "user@mail.com",
+        "customer": null,
+        "active": true
     }`
 
 	// Parse JSON
@@ -39,6 +43,7 @@ func main() {
 
 	// Build tree
 	tree := BuildTree(data, "", nil)
+    SetCurrentTheme("dark")
 
 	if len(os.Getenv("DEBUG")) > 0 {
 		f, err := tea.LogToFile("debug.log", "debug")
@@ -178,33 +183,60 @@ func (m model) Print() string {
     for i, line := range m.visibleLines.linesOnScreen {
         // Print line at cursor
         if i + m.visibleLines.firstLine == m.cursorY {
+            num := m.tree.VirtualToRealLines[m.cursorY] + 1
+            node, exists := m.tree.GetNodeAtLine(m.tree.VirtualToRealLines[m.cursorY])
+            if exists {
+                log.Println(node.IsArrayElement)
+            }
+
+            cursorChar := line.content[:1]
             s += fmt.Sprintf(
-                "%d > %s \n",
-                m.tree.VirtualToRealLines[m.cursorY] + 1,
-                line.content,
+                "%s %s%s \n",
+                lineNumbersCol.Render(strconv.Itoa(num) + " "),
+                // TODO(isaac): find a better way to display the cursor
+                cursorStyle.Render(cursorChar),
+                line.content[1:],
+                //printLineWithCursor(line.content),
             )
         }
 
         // Print lines before cursor
         if i + m.visibleLines.firstLine < m.cursorY {
+            num := (m.cursorY - m.visibleLines.firstLine) - i
             s += fmt.Sprintf(
-                "%d %s \n",
-                (m.cursorY - m.visibleLines.firstLine) - i,
+                "%s %s \n",
+                lineNumbersCol.Render(strconv.Itoa(num)),
                 line.content,
             )
         }
 
         // Print lines after cursor
         if i + m.visibleLines.firstLine > m.cursorY {
+            num := i - (m.cursorY - m.visibleLines.firstLine)
             s += fmt.Sprintf(
-                "%d %s \n",
-                i - (m.cursorY - m.visibleLines.firstLine),
+                "%s %s \n",
+                lineNumbersCol.Render(strconv.Itoa(num)),
                 line.content,
             )
         }
     }
 
 	return strings.TrimSuffix(s, "\n")
+}
+
+func printLineWithCursor(line string) string {
+    cursorChar := " "
+    pos := 0
+    for i, char := range line {
+        if !unicode.IsSpace(char) {
+            cursorChar = string(char)
+            pos = i
+            break
+        }
+    }
+    return  line[:pos] +
+        cursorStyle.Render(cursorChar) +
+        line[pos+1:]
 }
 
 func (m model) ScrollDown() {
