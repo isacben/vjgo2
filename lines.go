@@ -75,11 +75,12 @@ func (vl *VisibleLines) UpdateContent(content string) {
 func (vl *VisibleLines2) UpdateContent2(content []LineMetadata) {
 	// clear slice
 	vl.content = vl.content[:0]
-    // can replace with:
-    // vl.content = append(vl.content, content...)
-	for _,line := range content {
-		vl.content = append(vl.content, line)
-	}
+
+    // equivalent to: 
+	// for _,line := range content {
+	// 	vl.content = append(vl.content, line)
+	// }
+    vl.content = append(vl.content, content...)
 }
 
 func (vl *VisibleLines) UpdateVisibleLines(firstLine int, total int) {

@@ -14,10 +14,6 @@ import (
     "github.com/mattn/go-isatty"
 )
 
-var flags = []string{
-	"--help",
-}
-
 var repeatBuffer string
 
 func main() {
@@ -34,28 +30,6 @@ func main() {
 			args = append(args, arg)
 		}
 	}
-
-
-	jsonData := `{
-        "user": {
-            "name": "John",
-            "list": [1, 200, "three", 4, true, null],
-            "escaped": "{\"hello\": \"world\"}",
-            "addresses": [
-                {
-                        "street": "123 Main St",
-                        "zipcode": "12345"
-                },
-                {
-                        "street": "456 Oak Ave",
-                        "zipcode": "67890"
-                }
-            ]
-        },
-        "email": "user@mail.com",
-        "customer": null,
-        "active": true
-    }`
 
     fd := os.Stdin.Fd()
 	stdinIsTty := isatty.IsTerminal(fd) || isatty.IsCygwinTerminal(fd)
@@ -83,24 +57,14 @@ func main() {
 		src = os.Stdin
 	}
 
-    b, err := io.ReadAll(src)
+    jsonInputBytes, err := io.ReadAll(src)
     if err != nil {
         panic(err)
     }
 
-    jsonData = string(b)
-
-
-	// Sample JSON data
-	//jsonData := `[
-    //    {
-    //        "helo": ["hola","oi"]
-    //    }
-    //]`
-
 	// Parse JSON
 	var data interface{}
-	if err := json.Unmarshal([]byte(jsonData), &data); err != nil {
+	if err := json.Unmarshal(jsonInputBytes, &data); err != nil {
 		panic(err)
 	}
 
@@ -118,7 +82,6 @@ func main() {
 	}
 
 	p := tea.NewProgram(
-		// model{input_str: strings.Split(json_str, "\n")}, tea.WithAltScreen())
 		model{tree: tree}, tea.WithAltScreen())
 
 	if _, err := p.Run(); err != nil {
@@ -128,7 +91,6 @@ func main() {
 
 type model struct {
 	tree             *JSONTree
-	visibleLines     *VisibleLines
 	visibleLines2     *VisibleLines2
     VirtualToRealLines []int
 	firstVisibleLine int
@@ -229,19 +191,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		{
 			if !m.ready {
-				//m.cursorY = 0
-				//m.firstVisibleLine = 0
 				m.margin = 3
 				m.windowLines = msg.Height - 1 // for the status bar
                 m.width = msg.Width
                 
 				m.tree.PrintAsJSONFromRoot()
 
-                //}
-				// m.visibleLines = NewVisibleLines(
-				//	m.firstVisibleLine, m.windowLines,
-			    //	m.tree.PrintAsJSONFromRoot(),
-				// )
 				 m.visibleLines2 = NewVisibleLines2(
 					m.firstVisibleLine, m.windowLines,
 			    	m.tree.PrintAsJSON2(),
@@ -284,10 +239,13 @@ func (m model) View() string {
 	if !m.ready {
 		return "loading"
 	}
-	s := m.Print2()
+	s := m.Render()
 
     // Print ~ on blank lines
-    blankLines := m.windowLines - len(m.visibleLines2.content) + m.visibleLines2.firstLine
+    blankLines := m.windowLines - 
+        len(m.visibleLines2.content) +
+        m.visibleLines2.firstLine
+
     for range blankLines {
         s += "\n" + blankChar.Render("~")
     }
@@ -301,50 +259,7 @@ func (m model) UpdateStatusBar() string {
     return s
 }
 
-func (m model) Print() string {
-	s := ""
-
-	for i, line := range m.visibleLines.linesOnScreen {
-		// Print line at cursor
-		if i+m.visibleLines.firstLine == m.cursorY {
-			num := m.tree.VirtualToRealLines[m.cursorY] + 1
-
-			cursorChar := line.content[:1]
-			s += fmt.Sprintf(
-				"%s %s%s \n",
-				lineNumbersCol.Render(strconv.Itoa(num)+" "),
-				// TODO(isaac): find a better way to display the cursor
-				cursorStyle.Render(cursorChar),
-				line.content[1:],
-				//printLineWithCursor(line.content),
-			)
-		}
-
-		// Print lines before cursor
-		if i+m.visibleLines.firstLine < m.cursorY {
-			num := (m.cursorY - m.visibleLines.firstLine) - i
-			s += fmt.Sprintf(
-				"%s %s \n",
-				lineNumbersCol.Render(strconv.Itoa(num)),
-				line.content,
-			)
-		}
-
-		// Print lines after cursor
-		if i+m.visibleLines.firstLine > m.cursorY {
-			num := i - (m.cursorY - m.visibleLines.firstLine)
-			s += fmt.Sprintf(
-				"%s %s \n",
-				lineNumbersCol.Render(strconv.Itoa(num)),
-				line.content,
-			)
-		}
-	}
-
-	return strings.TrimSuffix(s, "\n")
-}
-
-func (m model) Print2() string {
+func (m model) Render() string {
 	s := ""
 
 	for i, line := range m.visibleLines2.linesOnScreen {
