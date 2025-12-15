@@ -1,1 +1,3 @@
-# vjgo2
+# vj
+
+JSON viewer for the terminal.
