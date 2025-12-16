@@ -138,6 +138,7 @@ func TestBuildTree(t *testing.T) {
 	assert.Equal(t, BoolType, tree.Nodes["active"].Type)
 }
 
+// TODO (isaac): rewrite with the new rendering system
 func TestPrintAsJSON_FullTree(t *testing.T) {
 	data := map[string]interface{}{
 		"user": map[string]interface{}{
@@ -180,6 +181,55 @@ func TestPrintAsJSON_FullTree(t *testing.T) {
 	})
 }
 
+func TestPrintAsJSON_FullTree2(t *testing.T) {
+	data := map[string]interface{}{
+		"user": map[string]interface{}{
+			"name": "John",
+			"age":  30.0,
+		},
+		// Unmarshal defaults to float64, so a cast is needed
+		// for the test
+		"friends": []interface{}{
+			float64(1), 2.5, "three", true, nil, "\n\"hello\"",
+		},
+		"identifications": []interface{}{
+			map[string]interface{}{
+				"type":   "passport",
+				"number": "123456789",
+			},
+			map[string]interface{}{
+				"type":   "license",
+				"number": "987654321",
+			},
+		},
+		"email":   "john@email.com",
+		"escaped": "{\"meta\": \"data\"}",
+		"active":  true,
+	}
+
+	tree := BuildTree(data, "", nil)
+
+	t.Run("print full tree", func(t *testing.T) {
+        currentTheme = themes["nocolor"]
+		lines := tree.PrintAsJSON2()
+        result := ""
+        for _, line := range lines {
+            result += RenderLine(line, false)
+            result += "\n"
+        }
+        result = strings.TrimSuffix(result, "\n")
+
+		// Parse both, expected and actual JSON
+		var actual interface{}
+		err := json.Unmarshal([]byte(result), &actual)
+		assert.NoError(t, err, "Generated JSON should be valid")
+
+		// expected, actual
+		assert.Equal(t, data, actual)
+	})
+}
+
+// TODO (isaac): rewrite with new rendering system
 func TestPrintAsJSON_CollapsedObject(t *testing.T) {
 	data := map[string]interface{}{
 		"user": map[string]interface{}{
@@ -198,6 +248,33 @@ func TestPrintAsJSON_CollapsedObject(t *testing.T) {
 	})
 }
 
+func TestPrintAsJSON_CollapsedObject2(t *testing.T) {
+	data := map[string]interface{}{
+		"user": map[string]interface{}{
+			"name": "John",
+			"age":  30.0,
+		},
+	}
+
+	tree := BuildTree(data, "", nil)
+	tree.Collapse("user")
+    currentTheme = themes["nocolor"]
+
+	t.Run("print tree with collapsed object", func(t *testing.T) {
+        lines := tree.PrintAsJSON2()
+        actual := ""
+        for _, line := range lines {
+            actual += RenderLine(line, false)
+            actual += "\n"
+        }
+        actual = strings.TrimSuffix(actual, "\n")
+
+		expected := "{\n  \"user\": {...}\n}"
+		assert.Equal(t, expected, actual)
+	})
+}
+
+// TODO (isaac): rewrite with new rendering system
 func TestPrintAsJSON_CollapsedArray(t *testing.T) {
 	data := map[string]interface{}{
 		"user": map[string]interface{}{
@@ -213,6 +290,32 @@ func TestPrintAsJSON_CollapsedArray(t *testing.T) {
 	t.Run("print tree with collapsed object", func(t *testing.T) {
 		expected := "{\n  \"user\": {\n    \"emails\": [...] // 2 items\n  }\n}"
 		assert.Equal(t, expected, tree.PrintAsJSONFromRoot())
+	})
+}
+
+func TestPrintAsJSON_CollapsedArray2(t *testing.T) {
+	data := map[string]interface{}{
+		"user": map[string]interface{}{
+			"emails": []interface{}{
+				"user@mail.com", "user@mail.org",
+			},
+		},
+	}
+
+	tree := BuildTree(data, "", nil)
+	tree.Collapse("user.emails")
+
+	t.Run("print tree with collapsed object", func(t *testing.T) {
+        lines := tree.PrintAsJSON2()
+        actual := ""
+        for _, line := range lines {
+            actual += RenderLine(line, false)
+            actual += "\n"
+        }
+        actual = strings.TrimSuffix(actual, "\n")
+
+		expected := "{\n  \"user\": {\n    \"emails\": [...]\n  }\n}"
+		assert.Equal(t, expected, actual)
 	})
 }
 
@@ -293,6 +396,7 @@ func TestGetNodeAtLine(t *testing.T) {
 	}
 }
 
+// TODO (isaac): rewrite with new rendering system
 func TestGetNodeAtLine_CompressedNode(t *testing.T) {
 	data := map[string]interface{}{
 		"user": map[string]interface{}{
@@ -318,6 +422,50 @@ func TestGetNodeAtLine_CompressedNode(t *testing.T) {
 
     // Print to update VirtualToRealLines
     _ = tree.PrintAsJSONFromRoot()
+
+    expectedNode, exists := tree.GetNode("identifications[1]")
+    assert.True(t, exists, "Expected node should exist")
+    found := 0
+
+    if exists {
+        for _, realLineNumber := range(tree.VirtualToRealLines) {
+            actualNode, exists := tree.GetNodeAtLine(realLineNumber)
+            if exists {
+                if actualNode.Path == expectedNode.Path {
+                    found++
+                }
+            }
+        }
+    }
+    assert.Equal(t, 1, found,
+        "Expected node not properly found using VirtualToRealLines")
+}
+
+func TestGetNodeAtLine_CompressedNode2(t *testing.T) {
+	data := map[string]interface{}{
+		"user": map[string]interface{}{
+			"name": "John",
+			"age":  30.0,
+		},
+		"email": "john@example.com",
+		"identifications": []interface{}{
+			map[string]interface{}{
+				"type":   "passport",
+				"number": "123456789",
+			},
+			map[string]interface{}{
+				"type":   "license",
+				"number": "987654321",
+			},
+		},
+		"active": true,
+	}
+
+    tree := BuildTree(data, "", nil)
+    tree.Collapse("identifications[0]")
+
+    // Print to update VirtualToRealLines
+    _ = tree.PrintAsJSON2()
 
     expectedNode, exists := tree.GetNode("identifications[1]")
     assert.True(t, exists, "Expected node should exist")

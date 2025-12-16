@@ -25,6 +25,7 @@ type Node struct {
 	Key            string      `json:"key"`
 	IsArrayElement bool        `json:"isArrayElement"`
 	LineNumber     int
+    ClosingLineNumber int
 }
 
 // Helper functions

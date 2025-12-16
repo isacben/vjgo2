@@ -403,7 +403,9 @@ func RenderLine(line LineMetadata, hasCursor bool) string {
 			switch line.NodeType {
 			case StringType:
 				return RenderIndent(indent, isSelected) + 
-                    RenderString(`"`+line.Content+`"`, hasCursor, isSelected) +
+                    RenderString(`"` +
+                        line.Content +`"`, 
+                        hasCursor, isSelected) +
                     RenderSyntax(comma, false, isSelected)
 			case NumberType:
 				return RenderIndent(indent, isSelected) + 

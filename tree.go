@@ -345,7 +345,7 @@ func (jt *JSONTree) collectLines(startPath string, indent int, result *[]LineMet
                 IsLastChild: isLast,
             }
             *result = append(*result, closeBrace)
-            jt.VirtualToRealLines = append(jt.VirtualToRealLines, closeBrace.LineNumber)
+            jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.ClosingLineNumber)
 		}
 
 	case ArrayType:
@@ -420,7 +420,7 @@ func (jt *JSONTree) collectLines(startPath string, indent int, result *[]LineMet
                 IsLastChild: isLast,
             }
             *result = append(*result, closeBracket)
-            jt.VirtualToRealLines = append(jt.VirtualToRealLines, closeBracket.LineNumber)
+            jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.ClosingLineNumber)
 		}
 
 
@@ -429,7 +429,7 @@ func (jt *JSONTree) collectLines(startPath string, indent int, result *[]LineMet
 		valueLine := LineMetadata{
 			LineNumber:     len(*result),
 			LineType:       ContentLine,
-			Content:        fmt.Sprintf("%v", node.Value),
+			// Content:        fmt.Sprintf("%v", node.Value),
 			NodePath:       startPath,
 			NodeType:       node.Type,
 			Key:            node.Key,
@@ -438,6 +438,19 @@ func (jt *JSONTree) collectLines(startPath string, indent int, result *[]LineMet
 			IsArrayElement: node.IsArrayElement,
 			IsLastChild:    isLast,
 		}
+
+        if node.Type == StringType {
+            escapedBytes, err := json.Marshal(node.Value)
+            if err != nil {
+                panic(err)
+            }
+
+            // Remove outer quotes
+            valueLine.Content = string(escapedBytes[1:len(escapedBytes)-1])
+        } else {
+            valueLine.Content = fmt.Sprintf("%v", node.Value)
+        }
+
 		*result = append(*result, valueLine)
         jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.LineNumber)
 	}
@@ -508,6 +521,11 @@ func BuildTree(data interface{}, basePath string, tree *JSONTree) *JSONTree {
 				BuildTree(value, childPath, tree)
 			}
 		}
+
+        if node, exists := tree.Nodes[basePath]; exists {
+            node.ClosingLineNumber = tree.lineCounter
+        }
+
 		tree.lineCounter++ // count the "}"
 
 	case []interface{}:
@@ -525,6 +543,11 @@ func BuildTree(data interface{}, basePath string, tree *JSONTree) *JSONTree {
 				BuildTree(value, childPath, tree)
 			}
 		}
+
+        if node, exists := tree.Nodes[basePath]; exists {
+            node.ClosingLineNumber = tree.lineCounter
+        }
+
 		tree.lineCounter++ // count the "]"
 	}
 
