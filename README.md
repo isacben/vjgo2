@@ -39,3 +39,6 @@ echo '{"helo": "world"}' | vj
 `g` - move cursor to the first line of the document<br>
 `G` - move cursor to the last line of the document<br>
 
+### Operations
+
+`q` - Quit vj
