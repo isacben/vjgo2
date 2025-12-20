@@ -16,6 +16,15 @@ import (
 
 var repeatBuffer string
 
+type Mode int
+const (
+    Normal Mode = iota
+    Command 
+    Visual
+    Search
+    Error
+)
+
 func main() {
     var args []string
 	for _, arg := range os.Args[1:] {
@@ -100,6 +109,9 @@ type model struct {
 	margin           int
 	cursorY          int
 	ready            bool
+    statusBar        string
+    mode             Mode
+    commandBuffer    string
 }
 
 func (m model) Init() tea.Cmd {
@@ -110,91 +122,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		{
-			switch msg.String() {
-			case "q":
-				return m, tea.Quit
-            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
-				{
-					repeatBuffer += fmt.Sprintf("%c", msg.Runes[0])
-				}
-            case "g":
-                {
-                    // Move the cursos to the top
-                    m.cursorY = 0
-					m.ScrollUp()
-                }
-            case "G":
-                {
-                    // Move the cursos to the end of the file
-                    if len(m.tree.VirtualToRealLines) > 0 {
-                        m.cursorY = len(m.tree.VirtualToRealLines) - 1
-                        m.ScrollDown()
-                    }
-                }
-			case "up", "k":
-				{
-                    steps := 1
-                    if repeatBuffer != "" {
-                        steps = timesToRepeat()
-                    }
-                    m.cursorY -= steps
+            switch m.mode {
+            case Normal:
+                return m.UpdateNormalMode(msg)
 
-					if m.cursorY < 0 {
-						m.cursorY = 0
-					}
+            case Command:
+                return m.UpdateCommandMode(msg)
 
-                    physicalLine := m.tree.VirtualToRealLines[m.cursorY]
-                    node, exists := m.tree.GetNodeAtLine(physicalLine)
-                    if exists {
-                        m.currentPath = node.Path
-                    }
-
-					m.ScrollUp()
-				}
-			case "down", "j":
-				{
-                    steps := 1
-                    if repeatBuffer != "" {
-                        steps = timesToRepeat()
-                    }
-                    m.cursorY += steps
-
-					if m.cursorY >= len(m.visibleLines2.content) {
-						m.cursorY = len(m.visibleLines2.content) - 1
-					}
-                    physicalLine := m.tree.VirtualToRealLines[m.cursorY]
-                    node, exists := m.tree.GetNodeAtLine(physicalLine)
-                    if exists {
-                        m.currentPath = node.Path
-                    }
-					m.ScrollDown()
-				}
-
-			case "left", "h":
-				{
-					physicalLine := m.tree.VirtualToRealLines[m.cursorY]
-					node, exists := m.tree.GetNodeAtLine(physicalLine)
-					if exists {
-						m.tree.Collapse(node.Path)
-						m.visibleLines2.UpdateContent2(m.tree.PrintAsJSON2())
-						m.visibleLines2.UpdateVisibleLines2(m.visibleLines2.firstLine,
-							m.visibleLines2.total)
-					}
-				}
-
-			case "right", "l":
-				{
-					physicalLine := m.tree.VirtualToRealLines[m.cursorY]
-					node, exists := m.tree.GetNodeAtLine(physicalLine)
-					if exists {
-						m.tree.Expand(node.Path)
-						m.visibleLines2.UpdateContent2(m.tree.PrintAsJSON2())
-						m.visibleLines2.UpdateVisibleLines2(m.visibleLines2.firstLine,
-							m.visibleLines2.total)
-					}
-				}
-			}
-		}
+            case Error:
+                return m.UpdateErrorMode(msg)
+            }
+        }
 
 	case tea.WindowSizeMsg:
 		{
@@ -240,6 +178,219 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (m model) UpdateNormalMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+    switch msg.String() {
+    case ":":
+        {
+            m.mode = Command
+            m.statusBar = ":" + "█"
+        }
+    case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9":
+        {
+            repeatBuffer += fmt.Sprintf("%c", msg.Runes[0])
+        }
+    case "g":
+        {
+            // Move the cursos to the top
+            m.cursorY = 0
+            m.ScrollUp()
+        }
+    case "G":
+        {
+            // Move the cursos to the end of the file
+            if len(m.tree.VirtualToRealLines) > 0 {
+                m.cursorY = len(m.tree.VirtualToRealLines) - 1
+                m.ScrollDown()
+            }
+        }
+    case "up", "k":
+        {
+            steps := 1
+            if repeatBuffer != "" {
+                steps = timesToRepeat()
+            }
+            m.cursorY -= steps
+
+            if m.cursorY < 0 {
+                m.cursorY = 0
+            }
+
+            physicalLine := m.tree.VirtualToRealLines[m.cursorY]
+            node, exists := m.tree.GetNodeAtLine(physicalLine)
+            m.currentPath = ""
+            if exists {
+                m.currentPath = "." + node.Path
+            }
+            m.statusBar = m.currentPath
+
+            m.ScrollUp()
+        }
+    case "down", "j":
+        {
+            steps := 1
+            if repeatBuffer != "" {
+                steps = timesToRepeat()
+            }
+            m.cursorY += steps
+
+            if m.cursorY >= len(m.visibleLines2.content) {
+                m.cursorY = len(m.visibleLines2.content) - 1
+            }
+            physicalLine := m.tree.VirtualToRealLines[m.cursorY]
+            node, exists := m.tree.GetNodeAtLine(physicalLine)
+            m.currentPath = ""
+            if exists {
+                m.currentPath = "." + node.Path
+            }
+            m.statusBar = m.currentPath
+            m.ScrollDown()
+        }
+
+    case "left", "h":
+        {
+            physicalLine := m.tree.VirtualToRealLines[m.cursorY]
+            node, exists := m.tree.GetNodeAtLine(physicalLine)
+            if exists {
+                m.tree.Collapse(node.Path)
+                m.visibleLines2.UpdateContent2(m.tree.PrintAsJSON2())
+                m.visibleLines2.UpdateVisibleLines2(m.visibleLines2.firstLine,
+                    m.visibleLines2.total)
+            }
+        }
+
+    case "right", "l":
+        {
+            physicalLine := m.tree.VirtualToRealLines[m.cursorY]
+            node, exists := m.tree.GetNodeAtLine(physicalLine)
+            if exists {
+                m.tree.Expand(node.Path)
+                m.visibleLines2.UpdateContent2(m.tree.PrintAsJSON2())
+                m.visibleLines2.UpdateVisibleLines2(m.visibleLines2.firstLine,
+                    m.visibleLines2.total)
+            }
+        }
+    }
+
+    return m, nil
+}
+
+func (m model) UpdateErrorMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+    switch msg.String() {
+    case tea.KeyEsc.String():
+        {
+            m.mode = Normal
+            m.commandBuffer = ""
+            m.statusBar = m.currentPath
+        }
+    case tea.KeyEnter.String(), ":":
+        {
+            m.mode = Command
+            m.commandBuffer = ""
+            m.statusBar = ":"
+        }
+    }
+    return m, nil
+}
+
+
+func (m model) UpdateCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+    switch msg.String() {
+    case tea.KeyEsc.String():
+        {
+            m.mode = Normal
+            m.commandBuffer = ""
+            m.statusBar = m.currentPath
+        }
+
+    case tea.KeyEnter.String():
+        return m.runCommand()
+
+    case tea.KeyBackspace.String():
+        {
+            // Remove last character
+            if len(m.commandBuffer) > 0 {
+                m.commandBuffer = m.commandBuffer[:len(m.commandBuffer)-1]
+            }
+            m.statusBar = ":" + m.commandBuffer + "█"
+        }
+
+    default:
+        // Handle visible characters
+        if len(msg.Runes) > 0 && msg.Runes[0] >= 32 && msg.Runes[0] <= 126 {
+            m.commandBuffer += string(msg.Runes[0])
+            m.statusBar = ":" + m.commandBuffer + "█"
+        }
+    }
+    return m, nil
+}
+
+func (m model) runCommand() (tea.Model, tea.Cmd) {
+    command := m.commandBuffer
+
+    // Handle quit command
+    if command == "q" {
+        return m, tea.Quit
+    }
+
+    // Handle path navigation commands
+    if strings.HasPrefix(command, ".") {
+        path := strings.TrimPrefix(command, ".")
+        if node, exists := m.tree.Nodes[path]; exists {
+            // Find the virtual line that corresponds to this path
+            virtualLine, found := m.findVirtualLineForPath(path)
+
+            if found {
+                m.cursorY = virtualLine
+                m.currentPath = "." + node.Path
+
+                // Ensure the cursor is visible (scroll if needed)
+                m.ScrollDown()
+                m.ScrollUp()
+
+                // Exit command mode and show the new path
+                m.mode = Normal
+                m.commandBuffer = ""
+                m.statusBar = m.currentPath
+
+                return m, nil
+            } else {
+                // Path exists but is not currently visible (might me collapsed)
+                m.mode = Error
+                m.statusBar = errorStyle.Render("Error: Path not visible (may be collapsed): ." + path)
+                m.commandBuffer = ""
+                return m, nil
+            }
+        } else {
+            // Path does not exist
+            m.mode = Error
+            m.statusBar = errorStyle.Render("Error: Path not found: ." + path)
+            m.commandBuffer = ""
+            return m, nil
+        }
+    }
+
+    // Handle unknown commands
+    m.mode = Error
+    m.statusBar = errorStyle.Render("Error: Unknown command: " + command)
+    m.commandBuffer = ""
+    return m, nil
+}
+
+func (m *model) findVirtualLineForPath(path string) (int, bool) {
+    node, exists := m.tree.Nodes[path]
+    if !exists {
+        return 0, false
+    }
+
+    // Find virtual line that corresponds to this real line
+    for virtualLine, realLine := range m.tree.VirtualToRealLines {
+        if realLine == node.LineNumber {
+            return virtualLine, true
+        }
+    }
+    return 0, false
+}
+
 func (m model) View() string {
 	if !m.ready {
 		return "loading"
@@ -260,7 +411,7 @@ func (m model) View() string {
 }
 
 func (m model) UpdateStatusBar() string {
-    s := m.currentPath
+    s := m.statusBar
     return s
 }
 

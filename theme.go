@@ -16,6 +16,7 @@ var (
 	numberStyle    lipgloss.Style
 	syntaxStyle    lipgloss.Style
     statusBarStyle lipgloss.Style
+    errorStyle     lipgloss.Style
 )
 
 type Color string
@@ -30,6 +31,7 @@ type Theme struct {
 	Number     Color
 	LineNumber Color
     Syntax     Color
+    Error      Color
 }
 
 var (
@@ -44,6 +46,7 @@ var (
 	defaultNumber     = Color("#ff9e64")
 	defaultLineNumber = Color("#565f89")
 	defaultSyntax     = Color("")
+    defaultError      = Color("9")
 )
 
 var themes = map[string]Theme{
@@ -67,6 +70,7 @@ var themes = map[string]Theme{
 		Number:     defaultNumber,
 		LineNumber: defaultLineNumber,
 		Syntax:     defaultSyntax,
+        Error:      defaultError,
 	},
 	 "light": {
 	 	Cursor:     Color("#0066cc"),
@@ -77,6 +81,7 @@ var themes = map[string]Theme{
 	 	Boolean:    Color("#d73a49"),
 	 	Number:     Color("#005cc5"),
 	 	LineNumber: Color("#586069"),
+        Error:      Color("9"),
 	 },
 }
 
@@ -115,6 +120,9 @@ func SetCurrentTheme(name string) {
 
     blankChar = lipgloss.NewStyle().
         Foreground(lipgloss.Color(currentTheme.LineNumber))
+
+    errorStyle = lipgloss.NewStyle().
+        Foreground(lipgloss.Color(currentTheme.Error))
         
 }
 
