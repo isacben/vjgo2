@@ -17,15 +17,15 @@ const (
 )
 
 type Node struct {
-	Path           string      `json:"path"`
-	Type           NodeType    `json:"type"`
-	Value          interface{} `json:"value"`
-	Parent         string      `json:"parent"`
-	Depth          int         `json:"depth"`
-	Key            string      `json:"key"`
-	IsArrayElement bool        `json:"isArrayElement"`
-	LineNumber     int
-    ClosingLineNumber int
+	Path              string      `json:"path"`
+	Type              NodeType    `json:"type"`
+	Value             interface{} `json:"value"`
+	Parent            string      `json:"parent"`
+	Depth             int         `json:"depth"`
+	Key               string      `json:"key"`
+	IsArrayElement    bool        `json:"isArrayElement"`
+	LineNumber        int
+	ClosingLineNumber int
 }
 
 // Helper functions

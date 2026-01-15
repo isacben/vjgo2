@@ -12,26 +12,26 @@ type line struct {
 type LineType string
 
 const (
-    ContentLine LineType = "content"
-    ContentWithBrace LineType = "content_with_brace"
-    OpenBracket LineType = "open_bracket"
-    CloseBracket LineType = "close_bracket"
-  )
+	ContentLine      LineType = "content"
+	ContentWithBrace LineType = "content_with_brace"
+	OpenBracket      LineType = "open_bracket"
+	CloseBracket     LineType = "close_bracket"
+)
 
 type LineMetadata struct {
-    LineNumber   int
-    LineType     LineType
-    Content      string
-    NodePath     string
-    NodeType     NodeType
-    Key          string
-    Value        interface{}
-    Indent       int
-    IsCollapsed  bool
-    HasChildren  bool
-    BracketChar  string // "{", "}", "[", "]"
-    IsArrayElement bool
-    IsLastChild  bool   // for comma handling
+	LineNumber     int
+	LineType       LineType
+	Content        string
+	NodePath       string
+	NodeType       NodeType
+	Key            string
+	Value          interface{}
+	Indent         int
+	IsCollapsed    bool
+	HasChildren    bool
+	BracketChar    string // "{", "}", "[", "]"
+	IsArrayElement bool
+	IsLastChild    bool // for comma handling
 }
 
 type VisibleLines struct {
@@ -42,10 +42,10 @@ type VisibleLines struct {
 }
 
 type VisibleLines2 struct {
-    firstLine int
-    total int
-    content []LineMetadata
-    linesOnScreen []LineMetadata
+	firstLine     int
+	total         int
+	content       []LineMetadata
+	linesOnScreen []LineMetadata
 }
 
 func NewVisibleLines(firstLine int, total int, content string) *VisibleLines {
@@ -76,11 +76,11 @@ func (vl *VisibleLines2) UpdateContent2(content []LineMetadata) {
 	// clear slice
 	vl.content = vl.content[:0]
 
-    // equivalent to: 
+	// equivalent to:
 	// for _,line := range content {
 	// 	vl.content = append(vl.content, line)
 	// }
-    vl.content = append(vl.content, content...)
+	vl.content = append(vl.content, content...)
 }
 
 func (vl *VisibleLines) UpdateVisibleLines(firstLine int, total int) {

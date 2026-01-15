@@ -277,7 +277,7 @@ func (jt *JSONTree) collectLines(startPath string, indent int, result *[]LineMet
 		if startPath == "" {
 			children := jt.Children[startPath]
 			for i, childPath := range children {
-				isLastChild := i == len(children) - 1
+				isLastChild := i == len(children)-1
 				jt.collectLines(childPath, indent, result, false, isLastChild)
 			}
 		}
@@ -287,84 +287,83 @@ func (jt *JSONTree) collectLines(startPath string, indent int, result *[]LineMet
 	switch node.Type {
 	case ObjectType:
 		// Add opening brace
-        if isRoot {
-            openBrace := LineMetadata{
-                LineNumber:  len(*result),
-                LineType:    OpenBracket,
-                Content:     "{",
-                NodePath:    startPath,
-                NodeType:    node.Type,
-                Indent:      indent,
-                BracketChar: "{",
-                IsCollapsed: jt.IsCollapsed(startPath),
-                HasChildren: jt.HasChildren(startPath),
-            }
-            *result = append(*result, openBrace)
-            jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.LineNumber)
-        }
+		if isRoot {
+			openBrace := LineMetadata{
+				LineNumber:  len(*result),
+				LineType:    OpenBracket,
+				Content:     "{",
+				NodePath:    startPath,
+				NodeType:    node.Type,
+				Indent:      indent,
+				BracketChar: "{",
+				IsCollapsed: jt.IsCollapsed(startPath),
+				HasChildren: jt.HasChildren(startPath),
+			}
+			*result = append(*result, openBrace)
+			jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.LineNumber)
+		}
 
 		// Add key line if this isn't root
 		if !isRoot && node.Key != "" {
 			keyLine := LineMetadata{
-				LineNumber:  len(*result),
-				LineType:    ContentWithBrace,
-				Content:     node.Key,
-				NodePath:    startPath,
-				NodeType:    node.Type,
-				Key:         node.Key,
-				Value:       node.Value,
-                IsArrayElement: node.IsArrayElement,
-				Indent:      indent,
-                BracketChar: "{",
-				IsCollapsed: jt.IsCollapsed(startPath),
-				HasChildren: jt.HasChildren(startPath),
-				IsLastChild: isLast,
+				LineNumber:     len(*result),
+				LineType:       ContentWithBrace,
+				Content:        node.Key,
+				NodePath:       startPath,
+				NodeType:       node.Type,
+				Key:            node.Key,
+				Value:          node.Value,
+				IsArrayElement: node.IsArrayElement,
+				Indent:         indent,
+				BracketChar:    "{",
+				IsCollapsed:    jt.IsCollapsed(startPath),
+				HasChildren:    jt.HasChildren(startPath),
+				IsLastChild:    isLast,
 			}
 			*result = append(*result, keyLine)
-            jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.LineNumber)
+			jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.LineNumber)
 		}
-
 
 		// Add children if not collapsed
 		if !jt.IsCollapsed(startPath) {
 			children := jt.Children[startPath]
 			for i, childPath := range children {
-				isLastChild := i == len(children) - 1
-				jt.collectLines(childPath, indent + 1, result, false, isLastChild)
+				isLastChild := i == len(children)-1
+				jt.collectLines(childPath, indent+1, result, false, isLastChild)
 			}
 
-            // Add closing brace
-            closeBrace := LineMetadata{
-                LineNumber:  len(*result),
-                LineType:    CloseBracket,
-                Content:     "}",
-                NodePath:    startPath,
-                NodeType:    node.Type,
-                Indent:      indent,
-                BracketChar: "}",
-                IsLastChild: isLast,
-            }
-            *result = append(*result, closeBrace)
-            jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.ClosingLineNumber)
+			// Add closing brace
+			closeBrace := LineMetadata{
+				LineNumber:  len(*result),
+				LineType:    CloseBracket,
+				Content:     "}",
+				NodePath:    startPath,
+				NodeType:    node.Type,
+				Indent:      indent,
+				BracketChar: "}",
+				IsLastChild: isLast,
+			}
+			*result = append(*result, closeBrace)
+			jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.ClosingLineNumber)
 		}
 
 	case ArrayType:
 		// Add opening brace if it's root
-        if isRoot {
-            openBrace := LineMetadata{
-                LineNumber:  len(*result),
-                LineType:    OpenBracket,
-                Content:     "[",
-                NodePath:    startPath,
-                NodeType:    node.Type,
-                Indent:      indent,
-                BracketChar: "[",
-                IsCollapsed: jt.IsCollapsed(startPath),
-                HasChildren: jt.HasChildren(startPath),
-            }
-            *result = append(*result, openBrace)
-            jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.LineNumber)
-        }
+		if isRoot {
+			openBrace := LineMetadata{
+				LineNumber:  len(*result),
+				LineType:    OpenBracket,
+				Content:     "[",
+				NodePath:    startPath,
+				NodeType:    node.Type,
+				Indent:      indent,
+				BracketChar: "[",
+				IsCollapsed: jt.IsCollapsed(startPath),
+				HasChildren: jt.HasChildren(startPath),
+			}
+			*result = append(*result, openBrace)
+			jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.LineNumber)
+		}
 
 		// Add key line if this isn't root
 		if !isRoot && node.Key != "" {
@@ -377,13 +376,13 @@ func (jt *JSONTree) collectLines(startPath string, indent int, result *[]LineMet
 				Key:         node.Key,
 				Value:       node.Value,
 				Indent:      indent,
-                BracketChar: "[",
+				BracketChar: "[",
 				IsCollapsed: jt.IsCollapsed(startPath),
 				HasChildren: jt.HasChildren(startPath),
 				IsLastChild: isLast,
 			}
 			*result = append(*result, keyLine)
-            jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.LineNumber)
+			jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.LineNumber)
 		}
 
 		// Add opening bracket
@@ -404,31 +403,30 @@ func (jt *JSONTree) collectLines(startPath string, indent int, result *[]LineMet
 		if !jt.IsCollapsed(startPath) {
 			children := jt.Children[startPath]
 			for i, childPath := range children {
-				isLastChild := i == len(children) - 1
-				jt.collectLines(childPath, indent + 1, result, false, isLastChild)
+				isLastChild := i == len(children)-1
+				jt.collectLines(childPath, indent+1, result, false, isLastChild)
 			}
 
-            // Add closing bracket
-            closeBracket := LineMetadata{
-                LineNumber:  len(*result),
-                LineType:    CloseBracket,
-                Content:     "]",
-                NodePath:    startPath,
-                NodeType:    node.Type,
-                Indent:      indent,
-                BracketChar: "]",
-                IsLastChild: isLast,
-            }
-            *result = append(*result, closeBracket)
-            jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.ClosingLineNumber)
+			// Add closing bracket
+			closeBracket := LineMetadata{
+				LineNumber:  len(*result),
+				LineType:    CloseBracket,
+				Content:     "]",
+				NodePath:    startPath,
+				NodeType:    node.Type,
+				Indent:      indent,
+				BracketChar: "]",
+				IsLastChild: isLast,
+			}
+			*result = append(*result, closeBracket)
+			jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.ClosingLineNumber)
 		}
-
 
 	default:
 		// Primitive values (string, number, boolean, null)
 		valueLine := LineMetadata{
-			LineNumber:     len(*result),
-			LineType:       ContentLine,
+			LineNumber: len(*result),
+			LineType:   ContentLine,
 			// Content:        fmt.Sprintf("%v", node.Value),
 			NodePath:       startPath,
 			NodeType:       node.Type,
@@ -439,20 +437,20 @@ func (jt *JSONTree) collectLines(startPath string, indent int, result *[]LineMet
 			IsLastChild:    isLast,
 		}
 
-        if node.Type == StringType {
-            escapedBytes, err := json.Marshal(node.Value)
-            if err != nil {
-                panic(err)
-            }
+		if node.Type == StringType {
+			escapedBytes, err := json.Marshal(node.Value)
+			if err != nil {
+				panic(err)
+			}
 
-            // Remove outer quotes
-            valueLine.Content = string(escapedBytes[1:len(escapedBytes)-1])
-        } else {
-            valueLine.Content = fmt.Sprintf("%v", node.Value)
-        }
+			// Remove outer quotes
+			valueLine.Content = string(escapedBytes[1 : len(escapedBytes)-1])
+		} else {
+			valueLine.Content = fmt.Sprintf("%v", node.Value)
+		}
 
 		*result = append(*result, valueLine)
-        jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.LineNumber)
+		jt.VirtualToRealLines = append(jt.VirtualToRealLines, node.LineNumber)
 	}
 }
 
@@ -482,12 +480,12 @@ func BuildTree(data interface{}, basePath string, tree *JSONTree) *JSONTree {
 	}
 
 	createNode := func(path string, value interface{},
-        key string, isParentArray bool) *Node {
+		key string, isParentArray bool) *Node {
 
 		nodeType := getNodeType(value)
 		depth := getDepth(path)
 		isArrayElement := regexp.MustCompile(`\[\d+\]$`).MatchString(path) ||
-            isParentArray
+			isParentArray
 
 		node := &Node{
 			Path:           path,
@@ -522,9 +520,9 @@ func BuildTree(data interface{}, basePath string, tree *JSONTree) *JSONTree {
 			}
 		}
 
-        if node, exists := tree.Nodes[basePath]; exists {
-            node.ClosingLineNumber = tree.lineCounter
-        }
+		if node, exists := tree.Nodes[basePath]; exists {
+			node.ClosingLineNumber = tree.lineCounter
+		}
 
 		tree.lineCounter++ // count the "}"
 
@@ -544,9 +542,9 @@ func BuildTree(data interface{}, basePath string, tree *JSONTree) *JSONTree {
 			}
 		}
 
-        if node, exists := tree.Nodes[basePath]; exists {
-            node.ClosingLineNumber = tree.lineCounter
-        }
+		if node, exists := tree.Nodes[basePath]; exists {
+			node.ClosingLineNumber = tree.lineCounter
+		}
 
 		tree.lineCounter++ // count the "]"
 	}

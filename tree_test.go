@@ -168,7 +168,7 @@ func TestPrintAsJSON_FullTree(t *testing.T) {
 	tree := BuildTree(data, "", nil)
 
 	t.Run("print full tree", func(t *testing.T) {
-        currentTheme = themes["nocolor"]
+		currentTheme = themes["nocolor"]
 		result := tree.PrintAsJSONFromRoot()
 
 		// Parse both, expected and actual JSON
@@ -210,14 +210,14 @@ func TestPrintAsJSON_FullTree2(t *testing.T) {
 	tree := BuildTree(data, "", nil)
 
 	t.Run("print full tree", func(t *testing.T) {
-        currentTheme = themes["nocolor"]
+		currentTheme = themes["nocolor"]
 		lines := tree.PrintAsJSON2()
-        result := ""
-        for _, line := range lines {
-            result += RenderLine(line, false)
-            result += "\n"
-        }
-        result = strings.TrimSuffix(result, "\n")
+		result := ""
+		for _, line := range lines {
+			result += RenderLine(line, false)
+			result += "\n"
+		}
+		result = strings.TrimSuffix(result, "\n")
 
 		// Parse both, expected and actual JSON
 		var actual interface{}
@@ -240,7 +240,7 @@ func TestPrintAsJSON_CollapsedObject(t *testing.T) {
 
 	tree := BuildTree(data, "", nil)
 	tree.Collapse("user")
-    currentTheme = themes["nocolor"]
+	currentTheme = themes["nocolor"]
 
 	t.Run("print tree with collapsed object", func(t *testing.T) {
 		expected := "{\n  \"user\": {...} // 2 properties\n}"
@@ -258,16 +258,16 @@ func TestPrintAsJSON_CollapsedObject2(t *testing.T) {
 
 	tree := BuildTree(data, "", nil)
 	tree.Collapse("user")
-    currentTheme = themes["nocolor"]
+	currentTheme = themes["nocolor"]
 
 	t.Run("print tree with collapsed object", func(t *testing.T) {
-        lines := tree.PrintAsJSON2()
-        actual := ""
-        for _, line := range lines {
-            actual += RenderLine(line, false)
-            actual += "\n"
-        }
-        actual = strings.TrimSuffix(actual, "\n")
+		lines := tree.PrintAsJSON2()
+		actual := ""
+		for _, line := range lines {
+			actual += RenderLine(line, false)
+			actual += "\n"
+		}
+		actual = strings.TrimSuffix(actual, "\n")
 
 		expected := "{\n  \"user\": {...}\n}"
 		assert.Equal(t, expected, actual)
@@ -306,13 +306,13 @@ func TestPrintAsJSON_CollapsedArray2(t *testing.T) {
 	tree.Collapse("user.emails")
 
 	t.Run("print tree with collapsed object", func(t *testing.T) {
-        lines := tree.PrintAsJSON2()
-        actual := ""
-        for _, line := range lines {
-            actual += RenderLine(line, false)
-            actual += "\n"
-        }
-        actual = strings.TrimSuffix(actual, "\n")
+		lines := tree.PrintAsJSON2()
+		actual := ""
+		for _, line := range lines {
+			actual += RenderLine(line, false)
+			actual += "\n"
+		}
+		actual = strings.TrimSuffix(actual, "\n")
 
 		expected := "{\n  \"user\": {\n    \"emails\": [...]\n  }\n}"
 		assert.Equal(t, expected, actual)
@@ -417,28 +417,28 @@ func TestGetNodeAtLine_CompressedNode(t *testing.T) {
 		"active": true,
 	}
 
-    tree := BuildTree(data, "", nil)
-    tree.Collapse("identifications[0]")
+	tree := BuildTree(data, "", nil)
+	tree.Collapse("identifications[0]")
 
-    // Print to update VirtualToRealLines
-    _ = tree.PrintAsJSONFromRoot()
+	// Print to update VirtualToRealLines
+	_ = tree.PrintAsJSONFromRoot()
 
-    expectedNode, exists := tree.GetNode("identifications[1]")
-    assert.True(t, exists, "Expected node should exist")
-    found := 0
+	expectedNode, exists := tree.GetNode("identifications[1]")
+	assert.True(t, exists, "Expected node should exist")
+	found := 0
 
-    if exists {
-        for _, realLineNumber := range(tree.VirtualToRealLines) {
-            actualNode, exists := tree.GetNodeAtLine(realLineNumber)
-            if exists {
-                if actualNode.Path == expectedNode.Path {
-                    found++
-                }
-            }
-        }
-    }
-    assert.Equal(t, 1, found,
-        "Expected node not properly found using VirtualToRealLines")
+	if exists {
+		for _, realLineNumber := range tree.VirtualToRealLines {
+			actualNode, exists := tree.GetNodeAtLine(realLineNumber)
+			if exists {
+				if actualNode.Path == expectedNode.Path {
+					found++
+				}
+			}
+		}
+	}
+	assert.Equal(t, 1, found,
+		"Expected node not properly found using VirtualToRealLines")
 }
 
 func TestGetNodeAtLine_CompressedNode2(t *testing.T) {
@@ -461,26 +461,26 @@ func TestGetNodeAtLine_CompressedNode2(t *testing.T) {
 		"active": true,
 	}
 
-    tree := BuildTree(data, "", nil)
-    tree.Collapse("identifications[0]")
+	tree := BuildTree(data, "", nil)
+	tree.Collapse("identifications[0]")
 
-    // Print to update VirtualToRealLines
-    _ = tree.PrintAsJSON2()
+	// Print to update VirtualToRealLines
+	_ = tree.PrintAsJSON2()
 
-    expectedNode, exists := tree.GetNode("identifications[1]")
-    assert.True(t, exists, "Expected node should exist")
-    found := 0
+	expectedNode, exists := tree.GetNode("identifications[1]")
+	assert.True(t, exists, "Expected node should exist")
+	found := 0
 
-    if exists {
-        for _, realLineNumber := range(tree.VirtualToRealLines) {
-            actualNode, exists := tree.GetNodeAtLine(realLineNumber)
-            if exists {
-                if actualNode.Path == expectedNode.Path {
-                    found++
-                }
-            }
-        }
-    }
-    assert.Equal(t, 1, found,
-        "Expected node not properly found using VirtualToRealLines")
+	if exists {
+		for _, realLineNumber := range tree.VirtualToRealLines {
+			actualNode, exists := tree.GetNodeAtLine(realLineNumber)
+			if exists {
+				if actualNode.Path == expectedNode.Path {
+					found++
+				}
+			}
+		}
+	}
+	assert.Equal(t, 1, found,
+		"Expected node not properly found using VirtualToRealLines")
 }

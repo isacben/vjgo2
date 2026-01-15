@@ -7,7 +7,7 @@ import (
 // Styles
 var (
 	lineNumbersCol lipgloss.Style
-    blankChar      lipgloss.Style
+	blankChar      lipgloss.Style
 	cursorStyle    lipgloss.Style
 	keyStyle       lipgloss.Style
 	stringStyle    lipgloss.Style
@@ -15,8 +15,8 @@ var (
 	booleanStyle   lipgloss.Style
 	numberStyle    lipgloss.Style
 	syntaxStyle    lipgloss.Style
-    statusBarStyle lipgloss.Style
-    errorStyle     lipgloss.Style
+	statusBarStyle lipgloss.Style
+	errorStyle     lipgloss.Style
 )
 
 type Color string
@@ -30,8 +30,8 @@ type Theme struct {
 	Boolean    Color
 	Number     Color
 	LineNumber Color
-    Syntax     Color
-    Error      Color
+	Syntax     Color
+	Error      Color
 }
 
 var (
@@ -46,7 +46,7 @@ var (
 	defaultNumber     = Color("#ff9e64")
 	defaultLineNumber = Color("#565f89")
 	defaultSyntax     = Color("")
-    defaultError      = Color("9")
+	defaultError      = Color("9")
 )
 
 var themes = map[string]Theme{
@@ -70,19 +70,19 @@ var themes = map[string]Theme{
 		Number:     defaultNumber,
 		LineNumber: defaultLineNumber,
 		Syntax:     defaultSyntax,
-        Error:      defaultError,
+		Error:      defaultError,
 	},
-	 "light": {
-	 	Cursor:     Color("#0066cc"),
-	 	StatusBar:  Color("4"),
-	 	Key:        Color("#0066cc"),
-	 	String:     Color("#22863a"),
-	 	Null:       Color("#6f42c1"),
-	 	Boolean:    Color("#d73a49"),
-	 	Number:     Color("#005cc5"),
-	 	LineNumber: Color("#586069"),
-        Error:      Color("9"),
-	 },
+	"light": {
+		Cursor:     Color("#0066cc"),
+		StatusBar:  Color("4"),
+		Key:        Color("#0066cc"),
+		String:     Color("#22863a"),
+		Null:       Color("#6f42c1"),
+		Boolean:    Color("#d73a49"),
+		Number:     Color("#005cc5"),
+		LineNumber: Color("#586069"),
+		Error:      Color("9"),
+	},
 }
 
 func SetCurrentTheme(name string) {
@@ -114,76 +114,75 @@ func SetCurrentTheme(name string) {
 	syntaxStyle = lipgloss.NewStyle().
 		Foreground(lipgloss.Color(currentTheme.Syntax))
 
-    statusBarStyle = lipgloss.NewStyle().
-        Align(lipgloss.Bottom).
-        Background(lipgloss.Color(currentTheme.StatusBar))
+	statusBarStyle = lipgloss.NewStyle().
+		Align(lipgloss.Bottom).
+		Background(lipgloss.Color(currentTheme.StatusBar))
 
-    blankChar = lipgloss.NewStyle().
-        Foreground(lipgloss.Color(currentTheme.LineNumber))
+	blankChar = lipgloss.NewStyle().
+		Foreground(lipgloss.Color(currentTheme.LineNumber))
 
-    errorStyle = lipgloss.NewStyle().
-        Foreground(lipgloss.Color(currentTheme.Error))
-        
+	errorStyle = lipgloss.NewStyle().
+		Foreground(lipgloss.Color(currentTheme.Error))
+
 }
 
 func RenderIndent(text string, selected bool) string {
-    if selected {
-        return lipgloss.NewStyle().
-            Background(lipgloss.Color("#414868")).Render(text)
-    }
+	if selected {
+		return lipgloss.NewStyle().
+			Background(lipgloss.Color("#414868")).Render(text)
+	}
 
-    return text
+	return text
 }
 
 func RenderKey(text string, selected bool) string {
-    if selected {
-        return keyStyle.Background(lipgloss.Color("#414868")).Render(text)
-    }
+	if selected {
+		return keyStyle.Background(lipgloss.Color("#414868")).Render(text)
+	}
 
-    return keyStyle.Render(text)
+	return keyStyle.Render(text)
 }
 
 func RenderSyntax(text string, hasCursor bool, isSelected bool) string {
-    return RenderElement(
-        text, hasCursor, isSelected, syntaxStyle)
+	return RenderElement(
+		text, hasCursor, isSelected, syntaxStyle)
 }
 
-
 func RenderString(text string, hasCursor bool, isSelected bool) string {
-    return RenderElement(
-        text, hasCursor, isSelected, stringStyle)
+	return RenderElement(
+		text, hasCursor, isSelected, stringStyle)
 }
 
 func RenderNumber(text string, hasCursor bool, isSelected bool) string {
-    return RenderElement(
-        text, hasCursor, isSelected, numberStyle)
+	return RenderElement(
+		text, hasCursor, isSelected, numberStyle)
 }
 
 func RenderBoolean(text string, hasCursor bool, isSelected bool) string {
-    return RenderElement(
-        text, hasCursor, isSelected, booleanStyle)
+	return RenderElement(
+		text, hasCursor, isSelected, booleanStyle)
 }
 
 func RenderNull(text string, hasCursor bool, isSelected bool) string {
-    return RenderElement(
-        text, hasCursor, isSelected, nullStyle)
+	return RenderElement(
+		text, hasCursor, isSelected, nullStyle)
 }
 
 func RenderElement(text string, hasCursor bool, selected bool, style lipgloss.Style) string {
-    if hasCursor {
-        cursor := cursorStyle.Render(text[:1])
+	if hasCursor {
+		cursor := cursorStyle.Render(text[:1])
 
-        if selected {
-            return cursor +
-                style.Background(lipgloss.Color("#414868")).Render(text[1:])
-        }
-        
-        return cursor + style.Render(text[1:])
-    }
+		if selected {
+			return cursor +
+				style.Background(lipgloss.Color("#414868")).Render(text[1:])
+		}
 
-    if selected {
-        return style.Background(lipgloss.Color("#414868")).Render(text)
-    }
+		return cursor + style.Render(text[1:])
+	}
 
-    return style.Render(text)
+	if selected {
+		return style.Background(lipgloss.Color("#414868")).Render(text)
+	}
+
+	return style.Render(text)
 }
